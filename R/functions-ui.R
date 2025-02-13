@@ -299,12 +299,13 @@ seed_input <- function(model_name) {
 }
 
 #' @export
+#' @param custom_models_path Path to custom model files.
 #' @return
 #' - `models_setup` returns an object of class list.
 #' @rdname epiworldrshiny-ui
 #' @examples
 #' models_setup()
-models_setup <- function() {
+models_setup <- function(custom_models_path = NULL) {
 
   # Getting the environment
   env <- parent.frame()
@@ -317,6 +318,20 @@ models_setup <- function() {
       pattern = "shiny_[a-z]+\\.R$",
       full.names = TRUE
       )
+
+
+    # Read in custom models
+    num_custom_models <- 0
+    if (!is.null(custom_models_path)) {
+      custom_models <- list.files(
+        custom_models_path,
+        pattern = "shiny_[a-z]+\\.R$",
+        full.names = TRUE
+        )
+
+      num_custom_models <- length(custom_models)
+      models <- c(custom_models, models)
+    }
 
     # Source each model file
     for (f in models) {
@@ -339,6 +354,12 @@ models_setup <- function() {
       altname
 
     })
+
+    # If model is custom (user-defined), prepend "(custom)"
+    if (num_custom_models > 0) {
+      for (i in 1:num_custom_models) 
+        models_names[i] <- paste("(custom)", models_names[i], sep = " ")
+    }    
 
     # Get the model names from the file names
     models <- gsub("^.+shiny_([^.]+).R$", "\\1", models)
